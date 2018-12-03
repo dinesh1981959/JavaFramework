@@ -4,17 +4,15 @@ import org.junit.Assert;
 import org.openqa.selenium.By;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
-import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.support.FindBy;
 import org.openqa.selenium.support.PageFactory;
 import org.openqa.selenium.support.ui.LoadableComponent;
-
-import java.util.Random;
+import java.util.Iterator;
+import java.util.List;
 
 public class Homepage extends LoadableComponent<Homepage> {
 
     private WebDriver driver;
-
     public Homepage(WebDriver driver) {
         this.driver = driver;
         PageFactory.initElements(driver, this);
@@ -30,60 +28,41 @@ public class Homepage extends LoadableComponent<Homepage> {
         // TODO Auto-generated method stub
     }
 
-    @FindBy(xpath = "//span[@class='nav-action-inner']")
-    WebElement signIn;
+    @FindBy(xpath = "//div[@class='col-xs-9']/small[contains(text(),'Purple Camera')]")
+    WebElement cartValidation;
 
-    @FindBy(id = "ap_email")
-    WebElement emailAddress;
-
-    @FindBy(xpath = "//div[@id='auth-password-missing-alert']/div/div[@class='a-alert-content']")
-    WebElement loginError;
-
-    @FindBy(id = "signInSubmit")
-    WebElement continueButton;
-
-
-
-    public void signInButton() {
-        signIn.click();
-    }
-
-    public void emailAddressInputField() {
-        driver.findElement(By.cssSelector("h1[class='a-spacing-small']")).isDisplayed();
-        Random rand = new Random();
-        int value = rand.nextInt(100);
-        emailAddress.sendKeys("testEmail"+value+"@mailinator.com");
-        selectContinueButton();
-    }
-
-    public void accountLink() throws InterruptedException {
-        WebElement link=driver.findElement(By.id("nav-link-yourAccount"));
-        Actions action= new Actions(driver);
-        action.moveToElement(link).build().perform();
-        for (int i=1;i<10;i++) {
-            if (signIn.isDisplayed()) {
-                signInButton();
-                break;
-            } else {
-                Thread.sleep(500);
+    public void addToCart(String item,String category){
+        List<WebElement> list= driver.findElements(By.xpath("//*[@id='app']/div/div[1]/div[2]/div[@class='col-sm-12']"));
+        Iterator<WebElement>iterator=list.iterator();
+        while(iterator.hasNext()){
+            WebElement element=iterator.next();
+            List<WebElement> header= element.findElements(By.tagName("h3"));
+            for(WebElement testHeader: header){
+                if(testHeader.getText().equals(category)){
+                    List<WebElement> items= element.findElements(By.tagName("strong"));
+                    for (int i=0;i<items.size();i++){
+                        String selectItem=items.get(i).getText();
+                        if (selectItem.equals(item)){
+                            int a=++i;
+                            driver.findElement(By.xpath("//*[@class='input-group-btn']/button[@type='button']/i[@class='fa fa-unsorted']")).click();
+                            driver.findElement(By.xpath("//*[@id='app']/div/div[1]/div[2]/div[1]/li["+a+"]/button")).click();
+                        }
+                    }
+                    break;
+                }
             }
         }
     }
 
-    public void selectContinueButton(){
-        continueButton.click();
-    }
-
-    public void verifyLoginError(String errorMessage,String field){
-
-        if(loginError.isDisplayed()){
-            String ActualErrorMessage=loginError.getText();
-            if (ActualErrorMessage.equals(errorMessage)){
-                System.out.println("PASS: Error message displayed successfully for the "+field+" field");
-                Assert.assertTrue(loginError.isDisplayed());
-            }else{
-                Assert.fail("In correct Error message displayed: "+ActualErrorMessage);
+    public void cartValidation() throws InterruptedException {
+        for (int i=0;i<10;i++){
+            if(cartValidation.isDisplayed()){
+                Assert.assertTrue(cartValidation.isDisplayed());
+            }else
+            {
+                Thread.sleep(1000);
             }
         }
     }
+
 }
